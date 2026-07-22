@@ -1,0 +1,111 @@
+Jawaban ringkas tentang project LiveKit ini:
+
+1. Struktur folder project
+
+aiko_2/
+├── .env.example
+├── .env.local
+├── .git/
+├── .github/
+├── AGENTS.md
+├── CLAUDE.md
+├── Dockerfile
+├── GEMINI.md
+├── LICENSE
+├── pyproject.toml
+├── README.md
+├── taskfile.yaml
+├── uv.lock
+├── src/
+│   ├── agent.py
+│   ├── instructions.txt
+│   └── __init__.py
+├── tests/
+│   └── test_agent.py
+└── .venv/
+
+2. Isi pyproject.toml
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-starter-python"
+version = "1.0.0"
+description = "Simple voice AI assistant built with LiveKit Agents for Python"
+requires-python = ">=3.10, <3.15"
+
+dependencies = [
+    "langchain-community>=0.4.2",
+    "livekit-agents[google,openai,silero,turn-detector]~=1.5",
+    "livekit-plugins-ai-coustics~=0.2",
+    "livekit-plugins-noise-cancellation>=0.2.5",
+    "livekit-plugins-silero>=1.5.16",
+    "python-dotenv",
+]
+
+3. Isi src/agent.py
+
+import os
+from dotenv import load_dotenv
+from livekit.agents import (
+    Agent,
+    AgentServer,
+    AgentSession,
+    JobContext,
+    room_io,
+    cli,
+)
+from livekit.plugins import google
+
+load_dotenv(".env.local")
+
+def get_instructions():
+    file_path = os.path.join(os.path.dirname(__file__), "instructions.txt")
+    with open(file_path, "r", encoding="utf-8") as file:
+        return file.read().strip()
+
+class Assistant(Agent):
+    def __init__(self) -> None:
+        super().__init__(
+            instructions=get_instructions(),
+            llm=google.realtime.RealtimeModel(
+                voice="Aoede",
+                temperature=0.8,
+            ),
+        )
+
+server = AgentServer()
+
+@server.rtc_session(agent_name="my-agent")
+async def my_agent(ctx: JobContext):
+    session = AgentSession()
+
+    await session.start(
+        agent=Assistant(),
+        room=ctx.room,
+        room_options=room_io.RoomOptions(
+            video_input=False,
+        ),
+    )
+
+    await ctx.connect()
+
+if __name__ == "__main__":
+    cli.run_app(server)
+
+4. Cara menjalankan sekarang
+
+Perintah yang benar untuk project ini adalah:
+
+uv run python src/agent.py dev
+
+Perintah uv run agent.py dev tidak tepat karena entrypoint ada di src/agent.py.
+
+Saat dijalankan, log yang muncul menunjukkan agen sudah mulai dan terdaftar ke LiveKit, misalnya:
+
+INFO livekit.agents HTTP server listening on :14342
+INFO livekit.agents registered worker
+
+Jadi agent sudah online/terdaftar dari sisi LiveKit.

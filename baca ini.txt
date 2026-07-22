@@ -1,0 +1,1 @@
+update terbaru 22 juli 2026 dimana untuk back end ini saja sudah terintegrasi ke supabase yang dimana transkrip akan disimpan
