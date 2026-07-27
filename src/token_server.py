@@ -1,7 +1,10 @@
 import os
+import random
+from typing import Any, Dict, Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from livekit import api
 from pydantic import BaseModel
 
@@ -14,10 +17,19 @@ app = FastAPI(
     version="1.0.0",
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 class TokenRequest(BaseModel):
-    participant_name: str
-    room_name: str
+    participant_name: Optional[str] = None
+    room_name: Optional[str] = None
+    room_config: Optional[Dict[str, Any]] = None
 
 
 @app.get("/")
@@ -26,7 +38,7 @@ async def root():
 
 
 @app.post("/get-token")
-async def get_token(request: TokenRequest):
+async def get_token(request: Optional[TokenRequest] = None):
     livekit_url = os.getenv("LIVEKIT_URL")
     api_key = os.getenv("LIVEKIT_API_KEY")
     api_secret = os.getenv("LIVEKIT_API_SECRET")
@@ -37,21 +49,39 @@ async def get_token(request: TokenRequest):
             detail="LiveKit environment variables are missing.",
         )
 
-    token = (
-        api.AccessToken(api_key, api_secret)
-        .with_identity(request.participant_name)
-        .with_name(request.participant_name)
-        .with_grants(
-            api.VideoGrants(
-                room_join=True,
-                room=request.room_name,
-            )
-        )
-        .to_jwt()
+    participant_name = (
+        request.participant_name
+        if request and request.participant_name
+        else f"voice_assistant_user_{random.randint(1000, 9999)}"
     )
+    room_name = (
+        request.room_name
+        if request and request.room_name
+        else f"voice_assistant_room_{random.randint(1000, 9999)}"
+    )
+
+    grant = api.VideoGrants(
+        room_join=True,
+        room=room_name,
+        can_publish=True,
+        can_subscribe=True,
+        can_publish_data=True,
+    )
+
+    token_builder = (
+        api.AccessToken(api_key, api_secret)
+        .with_identity(participant_name)
+        .with_name(participant_name)
+        .with_grants(grant)
+    )
+
+    token = token_builder.to_jwt()
 
     return {
         "serverUrl": livekit_url,
+        "roomName": room_name,
+        "participantName": participant_name,
+        "participantToken": token,
         "token": token,
     }
 
