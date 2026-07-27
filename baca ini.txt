@@ -1,1 +1,3 @@
 update terbaru 22 juli 2026 dimana untuk back end ini saja sudah terintegrasi ke supabase yang dimana transkrip akan disimpan
+
+update terbaru : saya berencna hosting ini di railway tapi tdak berjalan mulus, rencanannya nanti pakai gemini minat buat prompt dan cek pakai antigravity apa saja yang perlu disiapkan lalu menghosting nya lewat tutorial dari gemini

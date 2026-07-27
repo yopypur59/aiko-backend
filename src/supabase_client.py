@@ -7,7 +7,9 @@ from supabase import Client, create_client
 logger = logging.getLogger(__name__)
 
 # Load environment variables
-load_dotenv(".env.local")
+if os.path.exists(".env.local"):
+    load_dotenv(".env.local")
+load_dotenv()
 
 supabase_url = os.environ.get("SUPABASE_URL")
 supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")

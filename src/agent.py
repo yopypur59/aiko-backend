@@ -15,7 +15,9 @@ from livekit.plugins import google
 
 from transcript_store import save_transcript
 
-load_dotenv(".env.local")
+if os.path.exists(".env.local"):
+    load_dotenv(".env.local")
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 

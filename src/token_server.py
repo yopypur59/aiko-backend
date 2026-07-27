@@ -5,7 +5,9 @@ from fastapi import FastAPI, HTTPException
 from livekit import api
 from pydantic import BaseModel
 
-load_dotenv(".env.local")
+if os.path.exists(".env.local"):
+    load_dotenv(".env.local")
+load_dotenv()
 
 app = FastAPI(
     title="LiveKit Token Server",
@@ -61,7 +63,7 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
 
     uvicorn.run(
-        "token_server:app",
+        "src.token_server:app",
         host=host,
         port=port,
         reload=True,
